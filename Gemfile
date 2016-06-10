@@ -10,6 +10,7 @@ gem 'spring', :group => :development
 
 gem 'sqlite3', :group => :development
 gem 'pg', :group => :production
+gem 'faraday'
 
 
 

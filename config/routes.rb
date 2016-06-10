@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  get 'main/verify'
+  post 'main/verify'
 
   get 'main/process_request'
 

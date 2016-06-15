@@ -23,22 +23,23 @@ class MainController < ApplicationController
     timestamp = message["timestamp"]
     msg = message["message"]
 
+    return unless msg
+    
     msg_id = msg["mid"]
     msg_txt = msg["text"]
     msg_attch = msg["attachments"]
 
     list_opts = msg_txt.match(/list\sdeals?(?:\son page\s)?(\d+)?/)
-    single_opts = msg_txt.match(/deal\sinfo(?:mation)?(?:\sfor\s)?(\w+)/)
+    single_opts = msg_txt.match(/deal\sinfo\s(?:mation)?(?:\sfor\s)?(.+)/)
     search_opts = msg_txt.match(/search(?:\sfor\s)?(\w+)/)
 
     if list_opts
-      pgNum = list_opts[0]
+      pgNum = list_opts[1]
       rply_msg = prepare_message(Cheapshark.get_deals(pageNumber: pgNum), msg_txt)
-      STDOUT.puts "match list_opts"
     elsif single_opts
-      rply_msg = prepare_message([], msg_txt)
+      rply_msg = prepare_message(Cheapshark.get_deal_info(single_opts[1]), msg_txt)
     elsif search_opts
-      rply_msg = prepare_message(Cheapshark.get_deals(title: search_opts[0]), msg_txt)
+      rply_msg = prepare_message(Cheapshark.get_deals(title: search_opts[1]), msg_txt)
     else
       # TODO: show help
       rply_msg = prepare_message([], msg_txt)
@@ -49,7 +50,10 @@ class MainController < ApplicationController
 
   def prepare_message(package, query)
     if package.empty?
-      { text: "Nothing found for query: #{query}"}
+      { text: "Nothing found for query: #{query}\nTry: list deals\n
+      list deals on page [page number]\n
+      deal info [deal id]\n
+      search for [item title]"}
     else
       {
         attachment: {
@@ -76,8 +80,7 @@ class MainController < ApplicationController
 
 
   def call_send_api(message)
-    STDOUT.puts "sending this message #{message}"
-    token = "EAADkEQodtFYBALiChq6qekWHHzv1oNBdnU0GMfZAQ1FiFJqeB6ZA8GZAZB0PM3aE8q0J5jnmaO4CuKKEEXNToUd1YSZAEk8OpmjSgtBMlmaaVmOA5v0HIzknW7QMfTiXgSW3U3eD0tMKWNWCqncF8P3xhvKM8G1oimPv9U2YpxQZDZD"
+    token = ENV["facebook_token"]
     uri = 'https://graph.facebook.com/v2.6/me/messages'
     uri += '?access_token=' + token
 
